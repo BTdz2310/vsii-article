@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CreateTagDto } from './dto/create-tag.dto';
+import { AuthPayloadRegisterDto } from './dto/payload-message.dto';
 
 @Injectable()
 export class TagService {
@@ -27,5 +28,16 @@ export class TagService {
 
   remove(id: string) {
     return this.prisma.tag.delete({ where: { id } });
+  }
+
+  register(data: AuthPayloadRegisterDto) {
+    return this.prisma.interestTags.createMany({
+      data: data.tags.map((tag) => {
+        return {
+          tagId: tag,
+          authId: data.authId,
+        };
+      }),
+    });
   }
 }

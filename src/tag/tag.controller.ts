@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
+import { EventPattern, Payload } from '@nestjs/microservices';
+import { AuthPayloadRegisterDto } from './dto/payload-message.dto';
 
 @Controller('tag')
 export class TagController {
@@ -21,13 +23,14 @@ export class TagController {
     return this.tagService.findOne(id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateTagDto: UpdateTagDto) {
-  //   return this.tagService.update(+id, updateTagDto);
-  // }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.tagService.remove(id);
+  }
+
+  @EventPattern('auth.register')
+  register(@Payload() data: AuthPayloadRegisterDto) {
+    console.log(data);
+    return this.tagService.register(data);
   }
 }
