@@ -1,0 +1,21 @@
+services:
+  postgis-article:
+    image: postgres:latest
+    container_name: article-postgresql
+    environment:
+      POSTGRES_DB: article_db
+      POSTGRES_USER: article_user
+      POSTGRES_PASSWORD: article_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - article_service:/var/lib/postgresql/data
+    restart: "no"
+    networks:
+      - default
+
+volumes:
+  article_service:
+
+networks:
+  default:

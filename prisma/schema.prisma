@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Article {
+  id              String           @id @default(uuid()) @map("id") @db.Uuid
+  title           String           @unique
+  description     String
+  content         String
+  authorId        String
+  categoryId      String           @db.Uuid
+  imageUrl        String
+  publishedAt     DateTime
+  isFromCommunity Boolean          @default(false)
+  likes           Like[]
+  dislikes        Dislike[]
+  ArticleHistory  ArticleHistory[]
+  tags            TagsOnArticles[]
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([publishedAt, id])
+  @@index([categoryId])
+  @@index([authorId])
+}
+
+model ArticleHistory {
+  id        String   @id @default(uuid())
+  articleId String   @db.Uuid
+  diff      Json
+  updatedAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id])
+
+  @@index([articleId])
+}
+
+model Like {
+  id        String   @id @default(uuid()) @map("id") @db.Uuid
+  articleId String   @db.Uuid
+  userId    String
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id])
+
+  @@index([articleId])
+  @@index([userId])
+}
+
+model Dislike {
+  id        String   @id @default(uuid()) @map("id") @db.Uuid
+  articleId String   @db.Uuid
+  userId    String
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id])
+
+  @@index([articleId])
+  @@index([userId])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+model Category {
+  id   String @id @default(uuid()) @map("id") @db.Uuid
+  name String @unique
+
+  articles Article[]
+  Tag      Tag[]
+}
+
+model Tag {
+  id         String @id @default(uuid()) @map("id") @db.Uuid
+  name       String @unique
+  imageUrl   String
+  categoryId String @db.Uuid
+
+  category     Category         @relation(fields: [categoryId], references: [id])
+  articles     TagsOnArticles[]
+  InterestTags InterestTags[]
+}
+
+model TagsOnArticles {
+  articleId String   @db.Uuid
+  tagId     String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id])
+  tag     Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([articleId, tagId])
+}
+
+model InterestTags {
+  authId String @db.Uuid
+  tagId  String @db.Uuid
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([authId, tagId])
+}

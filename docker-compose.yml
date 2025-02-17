@@ -1,0 +1,35 @@
+services:
+  postgis-article:
+    image: postgres:latest
+    container_name: article-postgresql
+    environment:
+      POSTGRES_DB: article_db
+      POSTGRES_USER: article_user
+      POSTGRES_PASSWORD: article_pass
+    ports:
+      - "5434:5432"
+    # expose:
+    #   - "5432"
+    volumes:
+      - article_service:/var/lib/postgresql/data
+    restart: "no"
+    networks:
+      - kafka_network
+
+  article:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgis-article
+    ports:
+      - "3002:3002"
+    networks:
+      - kafka_network
+
+volumes:
+  article_service:
+
+networks:
+  kafka_network:
+    external: true
