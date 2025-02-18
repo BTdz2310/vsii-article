@@ -19,10 +19,13 @@ model Article {
   description     String
   content         String
   authorId        String
+  authorName      String
+  authorAvatar    String
   categoryId      String           @db.Uuid
   imageUrl        String
-  publishedAt     DateTime
+  publishedAt     DateTime?
   isFromCommunity Boolean          @default(false)
+  status          ArticleStatus
   likes           Like[]
   dislikes        Dislike[]
   ArticleHistory  ArticleHistory[]
@@ -74,6 +77,8 @@ enum ArticleStatus {
   DRAFT
   PUBLISHED
   HIDDEN
+  PENDING
+  REJECTED
 }
 
 model Category {

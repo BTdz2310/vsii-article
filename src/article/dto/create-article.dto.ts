@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/class-transformer';
 import {
+  IsArray,
   IsDate,
   IsNotEmpty,
   IsOptional,
@@ -9,13 +10,14 @@ import {
   Matches,
   MinLength,
 } from '@nestjs/class-validator';
+import { Status } from 'enums/status.enum';
 
 export class CreateArticleDto {
   @IsString()
   @Length(10, 50, { message: 'Tiêu đề phải từ 10 đến 50 ký tự' })
-  @Matches(/^[a-zA-Z0-9\s]*$/, {
-    message: 'Tiêu đề không được chứa ký tự đặc biệt',
-  })
+  // @Matches(/^[a-zA-Z0-9\s]*$/, {
+  //   message: 'Tiêu đề không được chứa ký tự đặc biệt',
+  // })
   title: string;
 
   @IsString()
@@ -29,14 +31,17 @@ export class CreateArticleDto {
   @IsUUID()
   categoryId: string;
 
-  @IsUUID()
-  authorId: string;
-
   @IsNotEmpty()
   imageUrl: string;
 
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  publishedAt: Date;
+  // @IsOptional()
+  // @IsDate()
+  // @Type(() => Date)
+  // publishedAt: Date;
+
+  status: Status;
+
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  tags: string[];
 }
