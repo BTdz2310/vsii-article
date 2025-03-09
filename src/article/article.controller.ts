@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { JwtGuard } from 'src/guards/jwt.guard';
@@ -8,7 +8,7 @@ import { Role } from 'enums/roles.enum';
 import { User } from 'decorators/user.decorator';
 import { IUser } from 'interfaces/user.interface';
 
-@Controller('article')
+@Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
@@ -19,18 +19,8 @@ export class ArticleController {
     return this.articleService.create(createArticleDto, user);
   }
 
-  @Get()
-  findAll() {
-    return 'hello';
-  }
-
-  @Get(':id')
+  @Get('/article/:id')
   findOne(@Param('id') id: string) {
-    return this.articleService.findOne(+id);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.articleService.remove(+id);
+    return this.articleService.findOne(id);
   }
 }

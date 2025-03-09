@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Role } from 'enums/roles.enum';
 import { Status } from 'enums/status.enum';
@@ -6,10 +6,14 @@ import { IUser } from 'interfaces/user.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import dayjs from 'dayjs';
+import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
 export class ArticleService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject('ARTICLE_SERVICE') private readonly kafkaClient: ClientKafka,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async create(
     createArticleDto: CreateArticleDto,
@@ -20,23 +24,21 @@ export class ArticleService {
     user: IUser,
   ) {
     try {
-      console.log(user)
+      console.log(user);
       const isFromCommunity = user.role.includes(Role.USER);
-      console.log(isFromCommunity)
-      let status = Status.DRAFT;
-      let publishedAt = {};
-      if (isFromCommunity && createArticleDto.status === Status.PENDING)
-        status = Status.PENDING;
-      else if (
-        !isFromCommunity &&
-        (createArticleDto.status === Status.PENDING ||
-          createArticleDto.status === Status.REJECTED)
-      )
-        status = Status.DRAFT;
-      // else if (!isFromCommunity && createArticleDto.status === Status.PUBLISHED)
+      const status = Status.PUBLISHED;
+      // let publishedAt = {};
+      // if (isFromCommunity && createArticleDto.status === Status.PENDING)
+      //   status = Status.PENDING;
+      // else if (
+      //   !isFromCommunity &&
+      //   createArticleDto.status === Status.PUBLISHED
+      // ) {
       //   publishedAt = {
       //     publishedAt: dayjs().toISOString(),
       //   };
+      // }
+      const publishedAt = new Date();
       const article = await this.prisma.article.create({
         data: {
           ...createArticleDto,
@@ -46,7 +48,7 @@ export class ArticleService {
           authorName: user.username,
           authorAvatar: user.avatar,
           categoryId: createArticleDto.categoryId,
-          ...publishedAt,
+          publishedAt,
           tags: {
             create: createArticleDto.tags.map((tagId) => ({
               tag: {
@@ -56,6 +58,17 @@ export class ArticleService {
           },
         },
       });
+      // console.log(dayjs(publishedAt).format('YYYY-MM-DD HH:mm:ss:SSS'));
+      const articleIndex = {
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        description: article.description,
+        publishedAt: new Date(publishedAt).getTime() / 1000,
+        imageUrl: article.imageUrl,
+        authorName: article.authorName,
+      };
+      this.kafkaClient.emit('article.index', articleIndex);
       return article;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -67,12 +80,10 @@ export class ArticleService {
     }
   }
 
-  findAll() {
-    return `This action returns all article`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} article`;
+  findOne(id: string) {
+    return this.prisma.article.findUnique({
+      where: { id },
+    });
   }
 
   remove(id: number) {
