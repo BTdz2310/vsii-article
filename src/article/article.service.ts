@@ -66,6 +66,7 @@ export class ArticleService {
         description: article.description,
         publishedAt: new Date(publishedAt).getTime() / 1000,
         imageUrl: article.imageUrl,
+        tags: createArticleDto.tags,
         authorName: article.authorName,
       };
       this.kafkaClient.emit('article.index', articleIndex);
